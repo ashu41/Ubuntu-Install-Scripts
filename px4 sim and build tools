@@ -1,0 +1,103 @@
+#!/bin/zsh
+
+## Bash script for setting up a ROS/Gazebo development environment for PX4 on Ubuntu LTS (16.04). 
+## It installs the common dependencies for all targets (including Qt Creator) and the ROS Kinetic/Gazebo 7 (the default).
+##
+## Installs:
+## - build tools and dependencies
+## - Common dependencies libraries and tools as defined in `ubuntu_sim_common_deps.sh`
+## - ROS Kinetic (including Gazebo7)
+
+echo "Downloading dependent script 'ubuntu_sim_common_deps.sh'"
+# Source the ubuntu_sim_common_deps.sh script directly from github
+common_deps=$(wget https://raw.githubusercontent.com/PX4/Devguide/master/build_scripts/ubuntu_sim_common_deps.sh -O -)
+wget_return_code=$?
+# If there was an error downloading the dependent script, we must warn the user and exit at this point.
+if [[ $wget_return_code -ne 0 ]]; then echo "Error downloading 'ubuntu_sim_common_deps.sh'. Sorry but I cannot proceed further :("; exit 1; fi
+# Otherwise source the downloaded script.
+. <(echo "${common_deps}")
+
+# ROS Kinetic/Gazebo (ROS Kinetic includes Gazebo7 by default)
+## Gazebo simulator dependencies
+sudo apt-get install protobuf-compiler libeigen3-dev libopencv-dev -y
+
+## ROS Gazebo: http://wiki.ros.org/kinetic/Installation/Ubuntu
+## Setup keys
+sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
+sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 421C365BD9FF1F717815A3895523BAEEB01FA116
+## For keyserver connection problems substitute hkp://pgp.mit.edu:80 or hkp://keyserver.ubuntu.com:80 above.
+sudo apt-get update
+## Get ROS/Gazebo
+sudo apt-get install ros-kinetic-desktop-full -y
+## Initialize rosdep
+sudo rosdep init
+rosdep update
+## Setup environment variables
+rossource="source /opt/ros/kinetic/setup.zsh"
+if grep -Fxq "$rossource" ~/.zshrc; then echo ROS setup.zsh already in .zshrc;
+else echo "$rossource" >> ~/.zshrc; fi
+eval $rossource
+## Get rosinstall
+sudo apt-get install python-rosinstall -y
+
+## Install dependencies
+sudo apt-get install python-wstool python-rosinstall-generator python-catkin-tools -y
+
+echo "Downloading dependent script 'install_geographiclib_datasets.sh'"
+# Source the install_geographiclib_datasets.sh script directly from github
+install_geo=$(wget https://raw.githubusercontent.com/mavlink/mavros/master/mavros/scripts/install_geographiclib_datasets.sh -O -)
+wget_return_code=$?
+# If there was an error downloading the dependent script, we must warn the user and exit at this point.
+if [[ $wget_return_code -ne 0 ]]; then echo "Error downloading 'install_geographiclib_datasets.sh'. Sorry but I cannot proceed further :("; exit 1; fi
+# Otherwise source the downloaded script.
+sudo zsh -c "$install_geo"
+
+
+
+## Bash script for setting up a PX4 development environment for Pixhawk/NuttX targets on Ubuntu LTS (16.04).
+## It can be used for installing simulators and the NuttX toolchain.
+##
+## Installs:
+## - Common dependencies libraries, tools, and Gazebo8 simulator as defined in `ubuntu_sim.sh`
+## - NuttX toolchain (i.e. gcc compiler)
+
+echo "Downloading dependent script 'ubuntu_sim.sh'"
+# Source the ubuntu_sim.sh script directly from github
+ubuntu_sim=$(wget https://raw.githubusercontent.com/PX4/Devguide/master/build_scripts/ubuntu_sim.sh -O -)
+wget_return_code=$?
+# If there was an error downloading the dependent script, we must warn the user and exit at this point.
+if [[ $wget_return_code -ne 0 ]]; then echo "Error downloading 'ubuntu_sim.sh'. Sorry but I cannot proceed further :("; exit 1; fi
+# Otherwise source the downloaded script.
+. <(echo "${ubuntu_sim}")
+
+# NuttX
+sudo apt-get install python-serial openocd \
+    flex bison libncurses5-dev autoconf texinfo \
+    libftdi-dev libtool zlib1g-dev -y
+
+# Clean up old GCC
+sudo apt-get remove gcc-arm-none-eabi gdb-arm-none-eabi binutils-arm-none-eabi gcc-arm-embedded -y
+sudo add-apt-repository --remove ppa:team-gcc-arm-embedded/ppa -y
+
+
+# GNU Arm Embedded Toolchain: 7-2017-q4-major December 18, 2017
+gcc_dir=$HOME/gcc-arm-none-eabi-7-2017-q4-major
+echo "Installing GCC to: $gcc_dir"
+if [ -d "$gcc_dir" ]
+then
+    echo " GCC already installed."
+else
+    pushd .
+    cd ~    
+    wget https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/7-2017q4/gcc-arm-none-eabi-7-2017-q4-major-linux.tar.bz2
+    tar -jxf gcc-arm-none-eabi-7-2017-q4-major-linux.tar.bz2
+    exportline="export PATH=$HOME/gcc-arm-none-eabi-7-2017-q4-major/bin:\$PATH"
+    if grep -Fxq "$exportline" ~/.profile; then echo " GCC path already set." ; else echo $exportline >> ~/.profile; fi
+    . ~/.profile
+    popd
+fi
+
+echo "The script has finished. The System will now reboot so that certain shell changes can take place"
+echo "sudo reboot"
+read -p "Press [Enter] to continue..." temp
+

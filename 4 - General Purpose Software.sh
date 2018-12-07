@@ -35,19 +35,30 @@ sudo apt-get install grub-customizer -y
 #sudo apt-get update -y
 #sudo apt-get install xdotool keepass2 -y
 
-wget https://go.skype.com/skypeforlinux-64.deb
-sudo dpkg -i skypeforlinux-64.deb
-rm skypeforlinux-64.deb
+#wget https://go.skype.com/skypeforlinux-64.deb
+#sudo dpkg -i skypeforlinux-64.deb
+#rm skypeforlinux-64.deb
 
 sudo apt-get install vlc -y
 
-## To install chrome, uncomment the next set of lines
-#wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add - 
-#sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
-#sudo apt-get update  -y
-#sudo apt-get install google-chrome-stable -y
+## To install spotify
+sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys BBEBDCB318AD50EC6865090613B00F1FD2C19886
+echo deb http://repository.spotify.com stable non-free | sudo tee /etc/apt/sources.list.d/spotify.list
+sudo apt-get update && sudo apt-get install spotify-client -y --allow-unauthenticated 
 
-sudo apt-get install chromium-browser -y
+## If you need to change theme of your choice
+sudo apt install unity-tweak-tool -y
+
+##  Improve battery life and reduce overheating with TLP
+sudo apt install tlp tlp-rdw -y
+
+## To install chrome,
+wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add - 
+sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
+sudo apt-get update  -y
+sudo apt-get install google-chrome-stable -y
+
+#sudo apt-get install chromium-browser -y
 sudo apt-get install adobe-flashplugin -y
 sudo apt-get install firefox -y
 
@@ -60,6 +71,8 @@ sudo apt-get install firefox -y
 #sudo apt-add-repository ppa:i2p-maintainers/i2p -y
 #sudo apt-get update -y
 #sudo apt-get install i2p -y
+
+
 
 echo
 echo
